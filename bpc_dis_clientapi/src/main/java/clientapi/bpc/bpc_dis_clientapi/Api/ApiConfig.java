@@ -21,6 +21,15 @@ public class ApiConfig {
     private Class responseTyp;
     private RequestMethod requestMethod;
     private String failureMessage;
+    private boolean useSub;
+
+    public boolean isUseSub() {
+        return useSub;
+    }
+
+    public void setUseSub(boolean useSub) {
+        this.useSub = useSub;
+    }
 
     public String getUrl() {
         return url;
@@ -29,6 +38,7 @@ public class ApiConfig {
     public void setUrl(String url) {
         this.url = url;
     }
+
     public HashMap<String, Object> getParams() {
         return params;
     }

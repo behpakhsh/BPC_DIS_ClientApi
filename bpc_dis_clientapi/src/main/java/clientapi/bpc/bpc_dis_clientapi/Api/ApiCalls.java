@@ -25,7 +25,6 @@ public interface ApiCalls {
     Call<JsonElement> get(@Header(BaseParamManager.apiVersion) String apiVersion, @Url String url);
 
 
-
     @FormUrlEncoded
     @POST
     Call<JsonElement> post(@Header(BaseParamManager.apiVersion) String apiVersion, @Url String url, @FieldMap HashMap<String, Object> hashFields);
@@ -43,9 +42,9 @@ public interface ApiCalls {
 
     @POST
     Call<JsonElement> post(@Header(BaseParamManager.apiVersion) String apiVersion, @Header(BaseParamManager.contentType) String contentType, @Url String url, @Body JsonArray jsonArray);
+
     @POST
     Call<JsonElement> post(@Header(BaseParamManager.apiVersion) String apiVersion, @Header(BaseParamManager.contentType) String contentType, @Header(BaseParamManager.authorization) String token, @Url String url, @Body JsonArray jsonArray);
-
 
 
     @FormUrlEncoded
@@ -65,7 +64,11 @@ public interface ApiCalls {
 
     @PUT
     Call<JsonElement> put(@Header(BaseParamManager.apiVersion) String apiVersion, @Header(BaseParamManager.contentType) String contentType, @Url String url, @Body JsonArray jsonArray);
+
     @PUT
     Call<JsonElement> put(@Header(BaseParamManager.apiVersion) String apiVersion, @Header(BaseParamManager.contentType) String contentType, @Header(BaseParamManager.authorization) String token, @Url String url, @Body JsonArray jsonArray);
+
+    @GET
+    Call<JsonElement> getSub(@Header(BaseParamManager.apiKey) String apiKey, @Url String url);
 
 }

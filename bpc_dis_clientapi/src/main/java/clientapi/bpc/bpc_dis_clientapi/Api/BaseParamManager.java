@@ -4,6 +4,7 @@ public class BaseParamManager {
     public static final String authorization = "Authorization";
     public static final String contentType = "Content-Type";
     public static final String apiVersion = "api-version";
+    public static final String apiKey = "Api-Key";
     public static String getBearer() {
         return "bearer";
     }

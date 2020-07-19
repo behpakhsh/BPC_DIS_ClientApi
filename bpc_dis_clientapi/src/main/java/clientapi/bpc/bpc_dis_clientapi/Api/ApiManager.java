@@ -12,7 +12,6 @@ import com.squareup.moshi.Moshi;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -32,27 +31,30 @@ import serialization.bpc.bpc_dis_serialization.Gson.GSONManager;
 
 public abstract class ApiManager {
 
+    private static Retrofit retrofit = null;
     private IAuthorizationManager authorizationManager;
     private ITokenManager tokenManger;
     private IApiVersionManager apiVersionManger;
     private IUrlManager urlManager;
     private Context context;
 
-    public ApiManager(Context context){
+    public ApiManager(Context context) {
         this.context = context;
         apiVersionManger = getApiVersionManger();
         tokenManger = getTokenManager();
         urlManager = getUrlManager();
         authorizationManager = getAuthorizationManager();
     }
+
     public abstract IApiVersionManager getApiVersionManger();
+
     public abstract ITokenManager getTokenManager();
+
     public abstract IUrlManager getUrlManager();
+
     public abstract int getTimeOut();
+
     public abstract IAuthorizationManager getAuthorizationManager();
-
-
-    private static Retrofit retrofit = null;
 
     public void get(String url, ApiConfig apiConfig, IApiRequestListener listener) {
         try {
@@ -72,83 +74,95 @@ public abstract class ApiManager {
                 }
                 absoluteUrl.deleteCharAt(absoluteUrl.length() - 1);
             }
-            String token = tokenManger.getTokenWithBearer(context);
 
-            ApiCalls calls =getClient();
-            if (!StringUtilities.isNullOrEmpty(token)) {
-                assert calls != null;
-                (calls.get(apiVersion,token, absoluteUrl.toString())).enqueue(getCallback(RequestMethod.GET, url, apiConfig, listener));
+            String token;
+            if (apiConfig.isUseSub()) {
+                token = tokenManger.getSubToken(context);
+                (getClient(apiConfig.isUseSub()).getSub(token, url)).enqueue(getCallback(RequestMethod.GET, url, apiConfig, listener));
             } else {
-
-                assert calls != null;
-                (calls.get(apiVersion, absoluteUrl.toString())).enqueue(getCallback(RequestMethod.GET, url, apiConfig, listener));
+                token = tokenManger.getTokenWithBearer(context);
+                if (!StringUtilities.isNullOrEmpty(token)) {
+                    (getClient(apiConfig.isUseSub()).get(apiVersion, token, absoluteUrl.toString())).enqueue(getCallback(RequestMethod.GET, url, apiConfig, listener));
+                } else {
+                    (getClient(apiConfig.isUseSub()).get(apiVersion, absoluteUrl.toString())).enqueue(getCallback(RequestMethod.GET, url, apiConfig, listener));
+                }
             }
+
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
     public void post(String url, ApiConfig apiConfig, IApiRequestListener listener) {
-                listener.onStart();
+        listener.onStart();
         String apiVersion = apiVersionManger.getApiVersion(url);
-        HashMap urlParams =apiConfig.getParams();
-        if ( urlParams!= null)
+        HashMap urlParams = apiConfig.getParams();
+        if (urlParams != null)
             if (urlParams.size() > 0)
                 apiConfig.setParams(convertParamsToEnglish(urlParams));
-        String token = tokenManger.getTokenWithBearer(context);
-        if (!StringUtilities.isNullOrEmpty(token)) {
-            if (apiConfig.getJsonArrays() != null){
-                (getClient().post(apiVersion, BaseParamManager.getContentType(), token, url, apiConfig.getJsonArrays())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
-            }
-            else if (apiConfig.getJsonParams() != null)
-                (getClient().post(apiVersion, BaseParamManager.getContentType(), token, url, apiConfig.getJsonParams())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
-
-            else
-                (getClient().post(apiVersion, token, url, urlParams)).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+        String token;
+        if (apiConfig.isUseSub()) {
+            token = tokenManger.getSubToken(context);
+            (getClient(apiConfig.isUseSub()).getSub(token, url)).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
         } else {
-            if (apiConfig.getJsonArrays() != null){
-                (getClient().post(apiVersion, BaseParamManager.getContentType(), url, apiConfig.getJsonArrays())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
-            }
-            else if (apiConfig.getJsonParams() != null)
-                (getClient().post(apiVersion, BaseParamManager.getContentType(), url, apiConfig.getJsonParams())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
-            else
-                (getClient().post(apiVersion, url, urlParams)).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+            token = tokenManger.getTokenWithBearer(context);
+            if (!StringUtilities.isNullOrEmpty(token)) {
+                if (apiConfig.getJsonArrays() != null) {
+                    (getClient(apiConfig.isUseSub()).put(apiVersion, BaseParamManager.getContentType(), token, url, apiConfig.getJsonArrays())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+                } else if (apiConfig.getJsonParams() != null)
+                    (getClient(apiConfig.isUseSub()).put(apiVersion, BaseParamManager.getContentType(), token, url, apiConfig.getJsonParams())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
 
+                else
+                    (getClient(apiConfig.isUseSub()).put(apiVersion, token, url, urlParams)).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+            } else {
+                if (apiConfig.getJsonArrays() != null) {
+                    (getClient(apiConfig.isUseSub()).put(apiVersion, BaseParamManager.getContentType(), url, apiConfig.getJsonArrays())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+                } else if (apiConfig.getJsonParams() != null)
+                    (getClient(apiConfig.isUseSub()).put(apiVersion, BaseParamManager.getContentType(), url, apiConfig.getJsonParams())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+                else
+                    (getClient(apiConfig.isUseSub()).put(apiVersion, url, urlParams)).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+
+            }
         }
     }
 
-    public  void put(String url, ApiConfig apiConfig, IApiRequestListener listener) {
+    public void put(String url, ApiConfig apiConfig, IApiRequestListener listener) {
         listener.onStart();
         String apiVersion = apiVersionManger.getApiVersion(url);
-        HashMap urlParams =apiConfig.getParams();
-        if ( urlParams!= null)
+        HashMap urlParams = apiConfig.getParams();
+        if (urlParams != null)
             if (urlParams.size() > 0)
                 apiConfig.setParams(convertParamsToEnglish(urlParams));
-        String token = tokenManger.getTokenWithBearer(context);
-        if (!StringUtilities.isNullOrEmpty(token)) {
-            if (apiConfig.getJsonArrays() != null){
-                (getClient().put(apiVersion, BaseParamManager.getContentType(), token, url, apiConfig.getJsonArrays())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
-            }
-            else if (apiConfig.getJsonParams() != null)
-                (getClient().put(apiVersion, BaseParamManager.getContentType(), token, url, apiConfig.getJsonParams())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
-
-            else
-                (getClient().put(apiVersion, token, url, urlParams)).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+        String token;
+        if (apiConfig.isUseSub()) {
+            token = tokenManger.getSubToken(context);
+            (getClient(apiConfig.isUseSub()).getSub(token, url)).enqueue(getCallback(RequestMethod.PUT, url, apiConfig, listener));
         } else {
-            if (apiConfig.getJsonArrays() != null){
-                (getClient().put(apiVersion, BaseParamManager.getContentType(), url, apiConfig.getJsonArrays())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
-            }
-            else if (apiConfig.getJsonParams() != null)
-                (getClient().put(apiVersion, BaseParamManager.getContentType(), url, apiConfig.getJsonParams())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
-            else
-                (getClient().put(apiVersion, url, urlParams)).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+            token = tokenManger.getTokenWithBearer(context);
+            if (!StringUtilities.isNullOrEmpty(token)) {
+                if (apiConfig.getJsonArrays() != null) {
+                    (getClient(apiConfig.isUseSub()).put(apiVersion, BaseParamManager.getContentType(), token, url, apiConfig.getJsonArrays())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+                } else if (apiConfig.getJsonParams() != null)
+                    (getClient(apiConfig.isUseSub()).put(apiVersion, BaseParamManager.getContentType(), token, url, apiConfig.getJsonParams())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
 
+                else
+                    (getClient(apiConfig.isUseSub()).put(apiVersion, token, url, urlParams)).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+            } else {
+                if (apiConfig.getJsonArrays() != null) {
+                    (getClient(apiConfig.isUseSub()).put(apiVersion, BaseParamManager.getContentType(), url, apiConfig.getJsonArrays())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+                } else if (apiConfig.getJsonParams() != null)
+                    (getClient(apiConfig.isUseSub()).put(apiVersion, BaseParamManager.getContentType(), url, apiConfig.getJsonParams())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+                else
+                    (getClient(apiConfig.isUseSub()).put(apiVersion, url, urlParams)).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+
+            }
         }
     }
 
 
     @SuppressWarnings("unchecked")
-    private ApiCalls getClient() {
+    private ApiCalls getClient(boolean useSubBaseUrl) {
         try {
             OkHttpClient okHttpClient = new OkHttpClient.Builder()
                     .connectTimeout(getTimeOut(), TimeUnit.SECONDS)
@@ -160,20 +174,24 @@ public abstract class ApiManager {
                     .create();
             Moshi moshi = new Moshi.Builder().build();
             if (retrofit == null) {
+                String baseUrl = urlManager.getBaseUrl();
+                if (useSubBaseUrl) {
+                    urlManager.getSubBaseUrl();
+                }
                 retrofit = new Retrofit.Builder()
-                        .baseUrl(urlManager.getBaseUrl())
+                        .baseUrl(baseUrl)
                         .client(okHttpClient)
                         .addConverterFactory(GsonConverterFactory.create(gson))
                         .addConverterFactory(MoshiConverterFactory.create(moshi))//todo -> test this
                         .build();
             }
             return retrofit.create(ApiCalls.class);
-        }
-        catch (Exception ex){
+        } catch (Exception ex) {
             return null;
         }
 
     }
+
     public HashMap<String, Object> convertParamsToEnglish(HashMap<String, Object> urlParams) {
         HashMap<String, Object> params = new HashMap<>();
         if (urlParams != null && urlParams.size() > 0) {
@@ -185,7 +203,8 @@ public abstract class ApiManager {
         }
         return params;
     }
-    private <T> Callback getCallback (final RequestMethod requestMethod, final String url, final ApiConfig config, final IApiRequestListener<T> listener) {
+
+    private <T> Callback getCallback(final RequestMethod requestMethod, final String url, final ApiConfig config, final IApiRequestListener<T> listener) {
 
         return new Callback<JsonElement>() {
 
@@ -203,10 +222,10 @@ public abstract class ApiManager {
                     return;
                 }
 
-                if (config.getResponseTyp() == null){
+                if (config.getResponseTyp() == null) {
                     config.setResponseTyp(ServerResponse.class);
                 }
-                T objects = (T) GSONManager.fromJson(response.body().getAsJsonObject().toString(),config.getResponseTyp());
+                T objects = (T) GSONManager.fromJson(response.body().getAsJsonObject().toString(), config.getResponseTyp());
                 listener.onSuccess(objects);
                 listener.onFinish();
             }
@@ -224,15 +243,15 @@ public abstract class ApiManager {
                 get(urlManager.getRefreshTokenUrl(), tokenConfig, new IApiRequestListener<ServerResponse>() {
                     @Override
                     public void onSuccess(ServerResponse response) {
-                        if (response.getResult()!= null && response.getResult().isValid() == false) {
+                        if (response.getResult() != null && response.getResult().isValid() == false) {
                             onRefreshTokenFailure();
                             return;
                         }
                         Token token = GSONManager.fromJson(response.getData(), Token.class);
                         if (!TextUtils.isEmpty(token.getAccessToken())) {
-                            tokenManger.setToken(context ,token.getAccessToken());
+                            tokenManger.setToken(context, token.getAccessToken());
                             if (!TextUtils.isEmpty(token.getRefreshToken())) {
-                                tokenManger.setRefreshToken(context,token.getRefreshToken());
+                                tokenManger.setRefreshToken(context, token.getRefreshToken());
                             }
                         }
                         switch (requestMethod) {
@@ -284,18 +303,18 @@ public abstract class ApiManager {
 
                 ApiRequestExceptionType exceptionType = ApiRequestExceptionType.Default;
 
-               if (t instanceof HttpException) {
-                   exceptionType = ApiRequestExceptionType.InternalServer;
-               }
+                if (t instanceof HttpException) {
+                    exceptionType = ApiRequestExceptionType.InternalServer;
+                }
 
-               if (t instanceof NetworkErrorException)
-                   exceptionType = ApiRequestExceptionType.Network;
+                if (t instanceof NetworkErrorException)
+                    exceptionType = ApiRequestExceptionType.Network;
 
-               if (t instanceof TimeoutException || t instanceof SocketTimeoutException)
-                   exceptionType = ApiRequestExceptionType.TimeOut;
+                if (t instanceof TimeoutException || t instanceof SocketTimeoutException)
+                    exceptionType = ApiRequestExceptionType.TimeOut;
 
-               listener.onFailure(exceptionType);
-               listener.onFinish();
+                listener.onFailure(exceptionType);
+                listener.onFinish();
             }
 
         };
