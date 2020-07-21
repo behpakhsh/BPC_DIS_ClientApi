@@ -78,7 +78,7 @@ public abstract class ApiManager {
             String token;
             if (apiConfig.isUseSub()) {
                 token = tokenManger.getSubToken(context);
-                (getClient(apiConfig.isUseSub()).getSub(token, url)).enqueue(getCallback(RequestMethod.GET, absoluteUrl.toString(), apiConfig, listener));
+                (getClient(apiConfig.isUseSub()).getSub(token, absoluteUrl.toString())).enqueue(getCallback(RequestMethod.GET, url, apiConfig, listener));
             } else {
                 token = tokenManger.getTokenWithBearer(context);
                 if (!StringUtilities.isNullOrEmpty(token)) {
