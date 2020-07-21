@@ -173,18 +173,16 @@ public abstract class ApiManager {
                     .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
                     .create();
             Moshi moshi = new Moshi.Builder().build();
-            if (retrofit == null) {
-                String baseUrl = urlManager.getBaseUrl();
-                if (useSubBaseUrl) {
-                    urlManager.getSubBaseUrl();
-                }
-                retrofit = new Retrofit.Builder()
-                        .baseUrl(baseUrl)
-                        .client(okHttpClient)
-                        .addConverterFactory(GsonConverterFactory.create(gson))
-                        .addConverterFactory(MoshiConverterFactory.create(moshi))//todo -> test this
-                        .build();
+            String baseUrl = urlManager.getBaseUrl();
+            if (useSubBaseUrl) {
+                urlManager.getSubBaseUrl();
             }
+            retrofit = new Retrofit.Builder()
+                    .baseUrl(baseUrl)
+                    .client(okHttpClient)
+                    .addConverterFactory(GsonConverterFactory.create(gson))
+                    .addConverterFactory(MoshiConverterFactory.create(moshi))//todo -> test this
+                    .build();
             return retrofit.create(ApiCalls.class);
         } catch (Exception ex) {
             return null;
