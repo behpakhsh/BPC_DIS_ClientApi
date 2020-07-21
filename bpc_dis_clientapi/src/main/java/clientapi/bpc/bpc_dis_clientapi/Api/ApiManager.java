@@ -175,7 +175,7 @@ public abstract class ApiManager {
             Moshi moshi = new Moshi.Builder().build();
             String baseUrl = urlManager.getBaseUrl();
             if (useSubBaseUrl) {
-                urlManager.getSubBaseUrl();
+                baseUrl = urlManager.getSubBaseUrl();
             }
             retrofit = new Retrofit.Builder()
                     .baseUrl(baseUrl)
