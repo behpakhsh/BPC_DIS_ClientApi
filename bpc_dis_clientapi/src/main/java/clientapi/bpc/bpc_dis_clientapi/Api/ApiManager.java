@@ -109,19 +109,18 @@ public abstract class ApiManager {
             token = tokenManger.getTokenWithBearer(context);
             if (!StringUtilities.isNullOrEmpty(token)) {
                 if (apiConfig.getJsonArrays() != null) {
-                    (getClient(apiConfig.isUseSub()).put(apiVersion, BaseParamManager.getContentType(), token, url, apiConfig.getJsonArrays())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+                    (getClient(apiConfig.isUseSub()).post(apiVersion, BaseParamManager.getContentType(), token, url, apiConfig.getJsonArrays())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
                 } else if (apiConfig.getJsonParams() != null)
-                    (getClient(apiConfig.isUseSub()).put(apiVersion, BaseParamManager.getContentType(), token, url, apiConfig.getJsonParams())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
-
+                    (getClient(apiConfig.isUseSub()).post(apiVersion, BaseParamManager.getContentType(), token, url, apiConfig.getJsonParams())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
                 else
-                    (getClient(apiConfig.isUseSub()).put(apiVersion, token, url, urlParams)).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+                    (getClient(apiConfig.isUseSub()).post(apiVersion, token, url, urlParams)).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
             } else {
                 if (apiConfig.getJsonArrays() != null) {
-                    (getClient(apiConfig.isUseSub()).put(apiVersion, BaseParamManager.getContentType(), url, apiConfig.getJsonArrays())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+                    (getClient(apiConfig.isUseSub()).post(apiVersion, BaseParamManager.getContentType(), url, apiConfig.getJsonArrays())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
                 } else if (apiConfig.getJsonParams() != null)
-                    (getClient(apiConfig.isUseSub()).put(apiVersion, BaseParamManager.getContentType(), url, apiConfig.getJsonParams())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+                    (getClient(apiConfig.isUseSub()).post(apiVersion, BaseParamManager.getContentType(), url, apiConfig.getJsonParams())).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
                 else
-                    (getClient(apiConfig.isUseSub()).put(apiVersion, url, urlParams)).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
+                    (getClient(apiConfig.isUseSub()).post(apiVersion, url, urlParams)).enqueue(getCallback(RequestMethod.POST, url, apiConfig, listener));
 
             }
         }
