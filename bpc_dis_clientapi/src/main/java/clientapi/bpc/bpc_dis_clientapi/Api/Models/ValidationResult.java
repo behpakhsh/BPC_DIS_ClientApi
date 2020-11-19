@@ -3,9 +3,7 @@ package clientapi.bpc.bpc_dis_clientapi.Api.Models;
 import com.google.gson.annotations.SerializedName;
 
 public class ValidationResult {
-    @SerializedName("a")
     private boolean isValid;
-    @SerializedName("b")
     private String validationMessage;
 
     public ValidationResult(boolean isValid, String validationMessage) {

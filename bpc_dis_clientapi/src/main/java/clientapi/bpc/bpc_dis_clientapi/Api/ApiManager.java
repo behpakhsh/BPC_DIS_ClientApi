@@ -66,7 +66,7 @@ public abstract class ApiManager {
             if (urlParams != null && urlParams.size() > 0) {
                 urlParams.size();
                 apiConfig.setParams(convertParamsToEnglish(urlParams));
-                absoluteUrl.append("?");
+                absoluteUrl.append(urlManager.getAppandUrlFormat());
                 for (Map.Entry<String, Object> entry : urlParams.entrySet()) {
                     String key = entry.getKey();
                     String value = entry.getValue().toString();

@@ -12,5 +12,6 @@ public interface IUrlManager {
     String getSubBaseUrl();
 
     String getSubTokenUrl();
+    String getAppandUrlFormat();
 
 }

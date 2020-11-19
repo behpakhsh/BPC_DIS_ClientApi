@@ -3,9 +3,7 @@ package clientapi.bpc.bpc_dis_clientapi.Api.Models;
 import com.google.gson.annotations.SerializedName;
 
 public class ServerResponse {
-    @SerializedName("a")
     private String data;
-    @SerializedName("b")
     private ValidationResult result;
 
     public ServerResponse() {
